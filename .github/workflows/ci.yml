@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  checks:
+    name: Lint, typecheck, test, and build
+    runs-on: ubuntu-latest
+
+    env:
+      # Unit tests never touch the database; the build needs a syntactically
+      # valid DATABASE_URL but never opens a connection (the db client is lazy).
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build

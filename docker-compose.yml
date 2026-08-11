@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:17
+    container_name: clinic-booking-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: clinic_booking
+    ports:
+      # Host port 5433 avoids clashing with any Postgres already running on
+      # the default 5432 (Postgres.app, another project's container, ...).
+      - "5433:5432"
+    volumes:
+      - clinic_booking_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d clinic_booking"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  clinic_booking_data:
