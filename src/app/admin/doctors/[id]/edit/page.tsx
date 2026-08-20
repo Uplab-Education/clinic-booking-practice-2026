@@ -3,10 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/auth/guards";
 import { DoctorForm } from "@/components/admin/DoctorForm";
 import { PageHeader } from "@/components/ui/page-header";
-import {
-  getDoctorById,
-  listSpecialties,
-} from "@/db/queries/doctors";
+import { getDoctorById, listSpecialties } from "@/db/queries/doctors";
 
 type EditDoctorPageProps = {
   params: Promise<{
@@ -14,13 +11,15 @@ type EditDoctorPageProps = {
   }>;
 };
 
-export default async function EditDoctorPage({
-  params,
-}: EditDoctorPageProps) {
+export default async function EditDoctorPage({ params }: EditDoctorPageProps) {
   await requireAdmin();
 
   const { id } = await params;
   const doctorId = Number(id);
+
+  if (!Number.isInteger(doctorId) || doctorId <= 0) {
+    notFound();
+  }
 
   const doctor = await getDoctorById(doctorId);
 
@@ -38,10 +37,7 @@ export default async function EditDoctorPage({
         description="Update doctor information."
       />
 
-      <DoctorForm
-        specialties={specialties}
-        doctor={doctor}
-      />
+      <DoctorForm specialties={specialties} doctor={doctor} />
     </>
   );
 }

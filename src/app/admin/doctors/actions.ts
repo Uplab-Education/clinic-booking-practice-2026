@@ -1,7 +1,9 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireAdmin } from "@/auth/guards";
 import {
   createDoctor,
   listSpecialties,
@@ -9,30 +11,56 @@ import {
   updateDoctor,
 } from "@/db/queries/doctors";
 
+import type { Specialty } from "@/db/schema";
+
 export type DoctorFormState = {
   errors?: {
     fullName?: string;
     specialtyId?: string;
   };
+  form?: string;
 };
 
-export async function createDoctorAction(
-  _prevState: DoctorFormState,
+type ParsedDoctorForm =
+  | {
+      success: true;
+      values: {
+        fullName: string;
+        specialtyId: number;
+        bio: string;
+        room: string | null;
+      };
+    }
+  | {
+      success: false;
+      errors: NonNullable<DoctorFormState["errors"]>;
+    };
+
+function parseDoctorId(value: FormDataEntryValue | null) {
+  const doctorId = Number(value);
+
+  if (!Number.isInteger(doctorId) || doctorId <= 0) {
+    return null;
+  }
+
+  return doctorId;
+}
+
+function parseDoctorForm(
   formData: FormData,
-): Promise<DoctorFormState> {
+  specialties: Specialty[],
+): ParsedDoctorForm {
   const fullName = String(formData.get("fullName") ?? "").trim();
   const specialtyId = Number(formData.get("specialtyId"));
   const bio = String(formData.get("bio") ?? "").trim();
   const roomValue = String(formData.get("room") ?? "").trim();
   const room = roomValue === "" ? null : roomValue;
 
-  const errors: DoctorFormState["errors"] = {};
+  const errors: NonNullable<DoctorFormState["errors"]> = {};
 
   if (!fullName) {
     errors.fullName = "Full name is required.";
   }
-
-  const specialties = await listSpecialties();
 
   const specialtyExists = specialties.some(
     (specialty) => specialty.id === specialtyId,
@@ -43,28 +71,64 @@ export async function createDoctorAction(
   }
 
   if (Object.keys(errors).length > 0) {
-    return { errors };
+    return {
+      success: false,
+      errors,
+    };
   }
 
-  await createDoctor({
-    fullName,
-    specialtyId,
-    bio,
-    room,
-  });
+  return {
+    success: true,
+    values: {
+      fullName,
+      specialtyId,
+      bio,
+      room,
+    },
+  };
+}
+
+export async function createDoctorAction(
+  _prevState: DoctorFormState,
+  formData: FormData,
+): Promise<DoctorFormState> {
+  await requireAdmin();
+
+  const specialties = await listSpecialties();
+  const parsed = parseDoctorForm(formData, specialties);
+
+  if (!parsed.success) {
+    return {
+      errors: parsed.errors,
+    };
+  }
+
+  await createDoctor(parsed.values);
+
+  revalidatePath("/admin/doctors");
+  revalidatePath("/doctors");
 
   redirect("/admin/doctors");
 }
 
 export async function toggleDoctorActiveAction(formData: FormData) {
-  const doctorId = Number(formData.get("doctorId"));
+  await requireAdmin();
+
+  const doctorId = parseDoctorId(formData.get("doctorId"));
   const isActive = String(formData.get("isActive")) === "true";
 
-  if (!doctorId) {
+  if (doctorId === null) {
     return;
   }
 
-  await setDoctorActive(doctorId, !isActive);
+  const doctor = await setDoctorActive(doctorId, !isActive);
+
+  if (!doctor) {
+    return;
+  }
+
+  revalidatePath("/admin/doctors");
+  revalidatePath("/doctors");
 
   redirect("/admin/doctors");
 }
@@ -73,47 +137,35 @@ export async function updateDoctorAction(
   _prevState: DoctorFormState,
   formData: FormData,
 ): Promise<DoctorFormState> {
-  const doctorId = Number(formData.get("doctorId"));
-  const fullName = String(formData.get("fullName") ?? "").trim();
-  const specialtyId = Number(formData.get("specialtyId"));
-  const bio = String(formData.get("bio") ?? "").trim();
-  const roomValue = String(formData.get("room") ?? "").trim();
-  const room = roomValue === "" ? null : roomValue;
+  await requireAdmin();
 
-  const errors: DoctorFormState["errors"] = {};
+  const doctorId = parseDoctorId(formData.get("doctorId"));
 
-  if (!doctorId) {
+  if (doctorId === null) {
     return {
-      errors: {
-        fullName: "Doctor was not found.",
-      },
+      form: "Doctor was not found.",
     };
   }
 
-  if (!fullName) {
-    errors.fullName = "Full name is required.";
-  }
-
   const specialties = await listSpecialties();
+  const parsed = parseDoctorForm(formData, specialties);
 
-  const specialtyExists = specialties.some(
-    (specialty) => specialty.id === specialtyId,
-  );
-
-  if (!specialtyExists) {
-    errors.specialtyId = "Please select a valid specialty.";
+  if (!parsed.success) {
+    return {
+      errors: parsed.errors,
+    };
   }
 
-  if (Object.keys(errors).length > 0) {
-    return { errors };
+  const doctor = await updateDoctor(doctorId, parsed.values);
+
+  if (!doctor) {
+    return {
+      form: "Doctor was not found.",
+    };
   }
 
-  await updateDoctor(doctorId, {
-    fullName,
-    specialtyId,
-    bio,
-    room,
-  });
+  revalidatePath("/admin/doctors");
+  revalidatePath("/doctors");
 
   redirect("/admin/doctors");
 }

@@ -17,24 +17,21 @@ type DoctorFormProps = {
 
 const initialState: DoctorFormState = {};
 
-export function DoctorForm({
-  specialties,
-  doctor,
-}: DoctorFormProps) {
+export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
   const action = doctor ? updateDoctorAction : createDoctorAction;
 
-  const [state, formAction, pending] = useActionState(
-    action,
-    initialState,
-  );
+  const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
     <form
       action={formAction}
       className="mt-6 max-w-xl space-y-5 rounded-lg border border-slate-200 bg-white p-6"
     >
-      {doctor && (
-        <input type="hidden" name="doctorId" value={doctor.id} />
+      {doctor && <input type="hidden" name="doctorId" value={doctor.id} />}
+      {state.form && (
+        <p className="text-sm text-red-600" aria-live="polite">
+          {state.form}
+        </p>
       )}
 
       <div className="space-y-2">
@@ -52,15 +49,11 @@ export function DoctorForm({
           aria-describedby={
             state.errors?.fullName ? "fullName-error" : undefined
           }
-         
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
 
         {state.errors?.fullName && (
-          <p
-            id="fullName-error"
-            className="text-sm text-red-600"
-          >
+          <p id="fullName-error" className="text-sm text-red-600">
             {state.errors.fullName}
           </p>
         )}
@@ -79,11 +72,8 @@ export function DoctorForm({
           name="specialtyId"
           defaultValue={doctor?.specialtyId ?? ""}
           aria-describedby={
-            state.errors?.specialtyId
-              ? "specialtyId-error"
-              : undefined
+            state.errors?.specialtyId ? "specialtyId-error" : undefined
           }
-         
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         >
           <option value="">Select specialty</option>
@@ -96,10 +86,7 @@ export function DoctorForm({
         </select>
 
         {state.errors?.specialtyId && (
-          <p
-            id="specialtyId-error"
-            className="text-sm text-red-600"
-          >
+          <p id="specialtyId-error" className="text-sm text-red-600">
             {state.errors.specialtyId}
           </p>
         )}
@@ -144,11 +131,7 @@ export function DoctorForm({
           disabled={pending}
           className="rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {pending
-            ? "Saving..."
-            : doctor
-              ? "Save changes"
-              : "Create doctor"}
+          {pending ? "Saving..." : doctor ? "Save changes" : "Create doctor"}
         </button>
       </div>
     </form>
