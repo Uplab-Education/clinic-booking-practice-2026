@@ -2,6 +2,7 @@ import { requireAdmin } from "@/auth/guards";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { listAllDoctors } from "@/db/queries/doctors";
+import { toggleDoctorActiveAction } from "./actions";
 
 export default async function AdminDoctorsPage() {
   await requireAdmin();
@@ -30,6 +31,7 @@ export default async function AdminDoctorsPage() {
               <th className="px-4 py-3">Specialty</th>
               <th className="px-4 py-3">Room</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
 
@@ -48,6 +50,26 @@ export default async function AdminDoctorsPage() {
                   <span className="rounded-full border border-slate-200 px-2 py-1 text-xs font-medium">
                     {doctor.isActive ? "Active" : "Deactivated"}
                   </span>
+                </td>
+                <td className="px-4 py-3">
+                  <Button asChild href={`/admin/doctors/${doctor.id}/edit`}>
+                    Edit
+                  </Button>
+                  <form action={toggleDoctorActiveAction}>
+                    <input type="hidden" name="doctorId" value={doctor.id} />
+                    <input
+                      type="hidden"
+                      name="isActive"
+                      value={String(doctor.isActive)}
+                    />
+
+                    <button
+                      type="submit"
+                      className="rounded-md border border-slate-300 px-3 py-1 text-sm"
+                    >
+                      {doctor.isActive ? "Deactivate" : "Activate"}
+                    </button>
+                  </form>
                 </td>
               </tr>
             ))}
