@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { getDoctorById } from "@/db/queries/doctors";
 import { listAvailableSlots } from "@/db/queries/appointments";
-import { formatSlotTime, groupSlotsByDay } from "@/lib/availability";
+import { BookingSlotPicker } from "@/components/booking/BookingSlotPicker";
+import { groupSlotsByDay } from "@/lib/availability";
 
 type DoctorProfilePageProps = {
   params: Promise<{ doctorId: string }>;
@@ -93,26 +94,7 @@ export default async function DoctorProfilePage({
             />
           </div>
         ) : (
-          <div className="mt-6 space-y-6">
-            {days.map((day) => (
-              <section key={day.dateIso}>
-                <h3 className="text-base font-semibold text-slate-950">
-                  {day.dayLabel}
-                </h3>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {day.slots.map((slot) => (
-                    <span
-                      key={slot.startsAt.toISOString()}
-                      className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700"
-                    >
-                      {formatSlotTime(slot.startsAt)}
-                    </span>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+          <BookingSlotPicker doctor={doctor} days={days} />
         )}
       </section>
     </>
