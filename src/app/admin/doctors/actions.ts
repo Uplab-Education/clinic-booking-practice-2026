@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+
 import {
   createDoctor,
   listSpecialties,
@@ -8,17 +9,28 @@ import {
   updateDoctor,
 } from "@/db/queries/doctors";
 
-export async function createDoctorAction(formData: FormData) {
+export type DoctorFormState = {
+  errors?: {
+    fullName?: string;
+    specialtyId?: string;
+  };
+};
+
+export async function createDoctorAction(
+  _prevState: DoctorFormState,
+  formData: FormData,
+): Promise<DoctorFormState> {
   const fullName = String(formData.get("fullName") ?? "").trim();
   const specialtyId = Number(formData.get("specialtyId"));
   const bio = String(formData.get("bio") ?? "").trim();
   const roomValue = String(formData.get("room") ?? "").trim();
-
   const room = roomValue === "" ? null : roomValue;
 
+  const errors: DoctorFormState["errors"] = {};
+
   if (!fullName) {
-  return;
-}
+    errors.fullName = "Full name is required.";
+  }
 
   const specialties = await listSpecialties();
 
@@ -27,8 +39,12 @@ export async function createDoctorAction(formData: FormData) {
   );
 
   if (!specialtyExists) {
-  return;
-}
+    errors.specialtyId = "Please select a valid specialty.";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { errors };
+  }
 
   await createDoctor({
     fullName,
@@ -36,6 +52,7 @@ export async function createDoctorAction(formData: FormData) {
     bio,
     room,
   });
+
   redirect("/admin/doctors");
 }
 
@@ -52,7 +69,10 @@ export async function toggleDoctorActiveAction(formData: FormData) {
   redirect("/admin/doctors");
 }
 
-export async function updateDoctorAction(formData: FormData) {
+export async function updateDoctorAction(
+  _prevState: DoctorFormState,
+  formData: FormData,
+): Promise<DoctorFormState> {
   const doctorId = Number(formData.get("doctorId"));
   const fullName = String(formData.get("fullName") ?? "").trim();
   const specialtyId = Number(formData.get("specialtyId"));
@@ -60,8 +80,18 @@ export async function updateDoctorAction(formData: FormData) {
   const roomValue = String(formData.get("room") ?? "").trim();
   const room = roomValue === "" ? null : roomValue;
 
-  if (!doctorId || !fullName) {
-    return;
+  const errors: DoctorFormState["errors"] = {};
+
+  if (!doctorId) {
+    return {
+      errors: {
+        fullName: "Doctor was not found.",
+      },
+    };
+  }
+
+  if (!fullName) {
+    errors.fullName = "Full name is required.";
   }
 
   const specialties = await listSpecialties();
@@ -71,7 +101,11 @@ export async function updateDoctorAction(formData: FormData) {
   );
 
   if (!specialtyExists) {
-    return;
+    errors.specialtyId = "Please select a valid specialty.";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { errors };
   }
 
   await updateDoctor(doctorId, {

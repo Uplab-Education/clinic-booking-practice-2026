@@ -1,18 +1,43 @@
 "use client";
 
-import { createDoctorAction } from "@/app/admin/doctors/actions";
-import type { Specialty } from "@/db/schema";
+import { useActionState } from "react";
+
+import {
+  createDoctorAction,
+  updateDoctorAction,
+  type DoctorFormState,
+} from "@/app/admin/doctors/actions";
+
+import type { Doctor, Specialty } from "@/db/schema";
 
 type DoctorFormProps = {
   specialties: Specialty[];
+  doctor?: Doctor;
 };
 
-export function DoctorForm({ specialties }: DoctorFormProps) {
+const initialState: DoctorFormState = {};
+
+export function DoctorForm({
+  specialties,
+  doctor,
+}: DoctorFormProps) {
+  const action = doctor ? updateDoctorAction : createDoctorAction;
+
+  const [state, formAction, pending] = useActionState(
+    action,
+    initialState,
+  );
+
   return (
     <form
-  action={createDoctorAction}
-  className="mt-6 max-w-xl space-y-5 rounded-lg border border-slate-200 bg-white p-6"> 
-<div className="space-y-2">
+      action={formAction}
+      className="mt-6 max-w-xl space-y-5 rounded-lg border border-slate-200 bg-white p-6"
+    >
+      {doctor && (
+        <input type="hidden" name="doctorId" value={doctor.id} />
+      )}
+
+      <div className="space-y-2">
         <label
           htmlFor="fullName"
           className="block text-sm font-medium text-slate-900"
@@ -23,10 +48,24 @@ export function DoctorForm({ specialties }: DoctorFormProps) {
         <input
           id="fullName"
           name="fullName"
-          required
+          defaultValue={doctor?.fullName ?? ""}
+          aria-describedby={
+            state.errors?.fullName ? "fullName-error" : undefined
+          }
+         
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
+
+        {state.errors?.fullName && (
+          <p
+            id="fullName-error"
+            className="text-sm text-red-600"
+          >
+            {state.errors.fullName}
+          </p>
+        )}
       </div>
+
       <div className="space-y-2">
         <label
           htmlFor="specialtyId"
@@ -38,7 +77,13 @@ export function DoctorForm({ specialties }: DoctorFormProps) {
         <select
           id="specialtyId"
           name="specialtyId"
-          required
+          defaultValue={doctor?.specialtyId ?? ""}
+          aria-describedby={
+            state.errors?.specialtyId
+              ? "specialtyId-error"
+              : undefined
+          }
+         
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         >
           <option value="">Select specialty</option>
@@ -49,7 +94,17 @@ export function DoctorForm({ specialties }: DoctorFormProps) {
             </option>
           ))}
         </select>
+
+        {state.errors?.specialtyId && (
+          <p
+            id="specialtyId-error"
+            className="text-sm text-red-600"
+          >
+            {state.errors.specialtyId}
+          </p>
+        )}
       </div>
+
       <div className="space-y-2">
         <label
           htmlFor="bio"
@@ -62,6 +117,7 @@ export function DoctorForm({ specialties }: DoctorFormProps) {
           id="bio"
           name="bio"
           rows={4}
+          defaultValue={doctor?.bio ?? ""}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
       </div>
@@ -77,15 +133,24 @@ export function DoctorForm({ specialties }: DoctorFormProps) {
         <input
           id="room"
           name="room"
+          defaultValue={doctor?.room ?? ""}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
       </div>
-      <button
-        type="submit"
-        className="rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white"
-      >
-        Create doctor
-      </button>
+
+      <div aria-live="polite">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        >
+          {pending
+            ? "Saving..."
+            : doctor
+              ? "Save changes"
+              : "Create doctor"}
+        </button>
+      </div>
     </form>
   );
 }
