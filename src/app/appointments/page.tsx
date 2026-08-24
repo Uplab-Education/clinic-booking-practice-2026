@@ -2,7 +2,7 @@ import { requireUser } from "@/auth/guards";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
-import { AppointmentCard } from "@/components/appointments/AppointmentCard";
+import { AppointmentsGroups } from "@/components/appointments/AppointmentsGroups";
 import { listPatientAppointments } from "@/db/queries/appointments";
 
 export default async function AppointmentsPage() {
@@ -23,6 +23,27 @@ export default async function AppointmentsPage() {
   const cancelled = appointments.filter(
     (appointment) => appointment.status === "cancelled",
   );
+
+  const groups = [
+    {
+      title: "Upcoming",
+      variant: "upcoming" as const,
+      appointments: upcoming,
+      emptyMessage: "No upcoming appointments.",
+    },
+    {
+      title: "Past",
+      variant: "past" as const,
+      appointments: past,
+      emptyMessage: "No past appointments.",
+    },
+    {
+      title: "Cancelled",
+      variant: "cancelled" as const,
+      appointments: cancelled,
+      emptyMessage: "No cancelled appointments.",
+    },
+  ];
 
   return (
     <>
@@ -45,73 +66,7 @@ export default async function AppointmentsPage() {
           />
         </div>
       ) : (
-        <div className="mt-8 space-y-10">
-          <section>
-            <h2 className="text-xl font-semibold text-slate-950">
-              Upcoming
-            </h2>
-
-            {upcoming.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-600">
-                No upcoming appointments.
-              </p>
-            ) : (
-              <div className="mt-4 grid min-w-0 gap-4">
-                {upcoming.map((appointment) => (
-                  <AppointmentCard
-                    key={appointment.id}
-                    appointment={appointment}
-                    variant="upcoming"
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-slate-950">
-              Past
-            </h2>
-
-            {past.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-600">
-                No past appointments.
-              </p>
-            ) : (
-              <div className="mt-4 grid min-w-0 gap-4">
-                {past.map((appointment) => (
-                  <AppointmentCard
-                    key={appointment.id}
-                    appointment={appointment}
-                    variant="past"
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-slate-950">
-              Cancelled
-            </h2>
-
-            {cancelled.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-600">
-                No cancelled appointments.
-              </p>
-            ) : (
-              <div className="mt-4 grid min-w-0 gap-4">
-                {cancelled.map((appointment) => (
-                  <AppointmentCard
-                    key={appointment.id}
-                    appointment={appointment}
-                    variant="cancelled"
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
+        <AppointmentsGroups groups={groups} />
       )}
     </>
   );
