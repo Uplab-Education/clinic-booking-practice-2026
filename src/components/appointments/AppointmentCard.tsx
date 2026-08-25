@@ -46,10 +46,12 @@ export function AppointmentCard({
 
       {canCancel ? (
         <div className="mt-4">
-          <CancelAppointmentDialog
-            appointmentId={appointment.id}
-            onResult={onResult}
-          />
+         <CancelAppointmentDialog
+  appointmentId={appointment.id}
+  doctorName={appointment.doctor.fullName}
+  startsAtLabel={formatAppointmentTime(appointment.startsAt)}
+  onResult={onResult}
+/>
         </div>
       ) : null}
     </article>

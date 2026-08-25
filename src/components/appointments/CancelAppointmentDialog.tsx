@@ -7,11 +7,15 @@ import { cancelMyAppointment } from "@/app/appointments/actions";
 
 type CancelAppointmentDialogProps = {
   appointmentId: number;
+  doctorName: string;
+  startsAtLabel: string;
   onResult: (message: string) => void;
 };
 
 export function CancelAppointmentDialog({
   appointmentId,
+  doctorName,
+  startsAtLabel,
   onResult,
 }: CancelAppointmentDialogProps) {
   const [open, setOpen] = useState(false);
@@ -67,7 +71,8 @@ export function CancelAppointmentDialog({
             </Dialog.Title>
 
             <Dialog.Description className="mt-2 text-sm leading-6 text-slate-600">
-              Are you sure you want to cancel this appointment?
+              Are you sure you want to cancel your appointment with{" "}
+              {doctorName} on {startsAtLabel}?
             </Dialog.Description>
 
             <div className="mt-6 flex flex-wrap justify-end gap-2">
