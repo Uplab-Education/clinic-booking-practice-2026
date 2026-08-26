@@ -1,20 +1,11 @@
 import Link from "next/link";
 
 import { requireAdmin } from "@/auth/guards";
+import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { listAllDoctors } from "@/db/queries/doctors";
 import { getDoctorSchedule } from "@/db/queries/schedules";
-
-const weekdays = [
-  { value: 1, label: "Monday" },
-  { value: 2, label: "Tuesday" },
-  { value: 3, label: "Wednesday" },
-  { value: 4, label: "Thursday" },
-  { value: 5, label: "Friday" },
-  { value: 6, label: "Saturday" },
-  { value: 0, label: "Sunday" },
-];
 
 type AdminSchedulesPageProps = {
   searchParams: Promise<{
@@ -84,58 +75,7 @@ export default async function AdminSchedulesPage({
               description="Select a doctor to view their weekly schedule."
             />
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-              <table className="w-full text-left">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-3">Day</th>
-                    <th className="px-4 py-3">Start</th>
-                    <th className="px-4 py-3">End</th>
-                    <th className="px-4 py-3">Slot length</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {weekdays.map((day) => {
-                    const entry = schedule.find(
-                      (item) => item.weekday === day.value,
-                    );
-
-                    return (
-                      <tr
-                        key={day.value}
-                        className="border-t border-slate-200"
-                      >
-                        <td className="px-4 py-3 font-medium">
-                          {day.label}
-                        </td>
-
-                        {entry ? (
-                          <>
-                            <td className="px-4 py-3">
-                              {entry.startTime.slice(0, 5)}
-                            </td>
-                            <td className="px-4 py-3">
-                              {entry.endTime.slice(0, 5)}
-                            </td>
-                            <td className="px-4 py-3">
-                              {entry.slotMinutes} min
-                            </td>
-                          </>
-                        ) : (
-                          <td
-                            colSpan={3}
-                            className="px-4 py-3 text-slate-500"
-                          >
-                            Day off
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <ScheduleEditor doctorId={selectedDoctor.id} entries={schedule} />
           )}
         </>
       )}
