@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
+import { Toast } from "@base-ui/react/toast";
 import { Button } from "@/components/ui/button";
 import { cancelMyAppointment } from "@/app/appointments/actions";
 
@@ -9,15 +10,15 @@ type CancelAppointmentDialogProps = {
   appointmentId: number;
   doctorName: string;
   startsAtLabel: string;
-  onResult: (message: string) => void;
 };
 
 export function CancelAppointmentDialog({
   appointmentId,
   doctorName,
   startsAtLabel,
-  onResult,
 }: CancelAppointmentDialogProps) {
+  const toastManager = Toast.useToastManager();
+
   const [open, setOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -31,10 +32,18 @@ export function CancelAppointmentDialog({
     try {
       const result = await cancelMyAppointment(appointmentId);
 
-      onResult(result.message);
+      toastManager.add({
+        title: result.ok ? "Cancellation successful" : "Cancellation failed",
+        description: result.message,
+      });
+
       setOpen(false);
     } catch {
-      onResult("Could not cancel this appointment. Please try again.");
+      toastManager.add({
+        title: "Cancellation failed",
+        description: "Could not cancel this appointment. Please try again.",
+      });
+
       setOpen(false);
     } finally {
       setIsCancelling(false);
@@ -47,7 +56,6 @@ export function CancelAppointmentDialog({
         type="button"
         variant="secondary"
         onClick={() => {
-          onResult("");
           setOpen(true);
         }}
       >

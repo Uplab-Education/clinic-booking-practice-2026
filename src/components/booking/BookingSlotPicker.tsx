@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
+import { Toast } from "@base-ui/react/toast";
 import { useAuth } from "@/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import { bookDoctorSlot } from "@/app/doctors/[doctorId]/actions";
@@ -26,9 +27,9 @@ export function BookingSlotPicker({
   days,
 }: BookingSlotPickerProps) {
   const { user } = useAuth();
+  const toastManager = Toast.useToastManager();
 
   const [selectedSlot, setSelectedSlot] = useState<FreeSlot | null>(null);
-  const [message, setMessage] = useState("");
   const [isBooking, setIsBooking] = useState(false);
 
   if (user?.role === "admin") {
@@ -51,53 +52,55 @@ export function BookingSlotPicker({
     }
 
     setIsBooking(true);
-    setMessage("");
 
-    const result = await bookDoctorSlot(
-      doctor.id,
-      selectedSlot.startsAt.toISOString(),
-    );
+    try {
+      const result = await bookDoctorSlot(
+        doctor.id,
+        selectedSlot.startsAt.toISOString(),
+      );
 
-    setIsBooking(false);
-    setSelectedSlot(null);
-    setMessage(result.message);
+      toastManager.add({
+        title: result.ok ? "Booking successful" : "Booking failed",
+        description: result.message,
+      });
+
+      setSelectedSlot(null);
+    } catch {
+      toastManager.add({
+        title: "Booking failed",
+        description: "Could not book this appointment. Please try again.",
+      });
+
+      setSelectedSlot(null);
+    } finally {
+      setIsBooking(false);
+    }
   }
 
   return (
-    <>
-      <div className="mt-4 space-y-6">
-        <div aria-live="polite" className="min-h-5">
-          {message ? (
-            <p className="text-sm font-medium text-slate-700">
-              {message}
-            </p>
-          ) : null}
-        </div>
+    <div className="mt-4 space-y-6">
+      {days.map((day) => (
+        <section key={day.dateIso}>
+          <h3 className="text-base font-semibold text-slate-950">
+            {day.dayLabel}
+          </h3>
 
-        {days.map((day) => (
-          <section key={day.dateIso}>
-            <h3 className="text-base font-semibold text-slate-950">
-              {day.dayLabel}
-            </h3>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              {day.slots.map((slot) => (
-                <Button
-                  key={slot.startsAt.toISOString()}
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    setMessage("");
-                    setSelectedSlot(slot);
-                  }}
-                >
-                  {formatSlotTime(slot.startsAt)}
-                </Button>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {day.slots.map((slot) => (
+              <Button
+                key={slot.startsAt.toISOString()}
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setSelectedSlot(slot);
+                }}
+              >
+                {formatSlotTime(slot.startsAt)}
+              </Button>
+            ))}
+          </div>
+        </section>
+      ))}
 
       <Dialog.Root
         open={selectedSlot !== null}
@@ -148,6 +151,6 @@ export function BookingSlotPicker({
           </Dialog.Popup>
         </Dialog.Portal>
       </Dialog.Root>
-    </>
+    </div>
   );
 }
