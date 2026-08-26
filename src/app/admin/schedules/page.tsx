@@ -39,6 +39,10 @@ export default async function AdminSchedulesPage({
         title="Schedules"
         description="Set each doctor's weekly working hours and appointment slot length."
       />
+      <p className="mb-6 text-sm leading-6 text-slate-600">
+        Changes to a weekly schedule update the free slots shown to patients.
+        Existing appointments are never modified.
+      </p>
 
       {doctors.length === 0 ? (
         <EmptyState
