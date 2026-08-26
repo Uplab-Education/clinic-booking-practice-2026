@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/auth/guards";
-import { upsertScheduleEntry } from "@/db/queries/schedules";
+import {
+  deleteScheduleEntry,
+  upsertScheduleEntry,
+} from "@/db/queries/schedules";
 
 export type ScheduleActionState = {
   error?: string;
@@ -61,5 +64,41 @@ export async function saveScheduleEntryAction(
 
   return {
     success: "Schedule saved.",
+  };
+}
+export async function clearScheduleEntryAction(
+  _prevState: ScheduleActionState,
+  formData: FormData,
+): Promise<ScheduleActionState> {
+  await requireAdmin();
+
+  const doctorId = Number(formData.get("doctorId"));
+  const weekday = Number(formData.get("weekday"));
+
+  if (!Number.isInteger(doctorId) || doctorId <= 0) {
+    return {
+      error: "Invalid doctor.",
+    };
+  }
+
+  if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) {
+    return {
+      error: "Invalid weekday.",
+    };
+  }
+
+  const deleted = await deleteScheduleEntry(doctorId, weekday);
+
+  if (!deleted) {
+    return {
+      error: "This day is already a day off.",
+    };
+  }
+
+  revalidatePath("/admin/schedules");
+  revalidatePath(`/doctors/${doctorId}`);
+
+  return {
+    success: "Schedule cleared.",
   };
 }
