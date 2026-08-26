@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import {
   clearScheduleEntryAction,
@@ -75,6 +75,10 @@ function ScheduleDayRow({
     initialState,
   );
 
+  const [lastAction, setLastAction] = useState<
+    "save" | "clear" | null
+  >(null);
+
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="mb-4">
@@ -89,7 +93,12 @@ function ScheduleDayRow({
         ) : null}
       </div>
 
-      <form action={saveFormAction}>
+      <form
+        action={saveFormAction}
+        onSubmit={() => {
+          setLastAction("save");
+        }}
+      >
         <input
           type="hidden"
           name="doctorId"
@@ -175,7 +184,10 @@ function ScheduleDayRow({
           onSubmit={(event) => {
             if (!window.confirm(`Clear ${label} schedule?`)) {
               event.preventDefault();
+              return;
             }
+
+            setLastAction("clear");
           }}
         >
           <input
@@ -204,25 +216,25 @@ function ScheduleDayRow({
         className="mt-3 text-sm"
         aria-live="polite"
       >
-        {saveState.error ? (
+        {lastAction === "save" && saveState.error ? (
           <p className="text-red-600">
             {saveState.error}
           </p>
         ) : null}
 
-        {saveState.success ? (
+        {lastAction === "save" && saveState.success ? (
           <p className="text-green-700">
             {saveState.success}
           </p>
         ) : null}
 
-        {clearState.error ? (
+        {lastAction === "clear" && clearState.error ? (
           <p className="text-red-600">
             {clearState.error}
           </p>
         ) : null}
 
-        {clearState.success ? (
+        {lastAction === "clear" && clearState.success ? (
           <p className="text-green-700">
             {clearState.success}
           </p>
