@@ -35,6 +35,10 @@ export function CancelAppointmentDialog({
       toastManager.add({
         title: result.ok ? "Cancellation successful" : "Cancellation failed",
         description: result.message,
+        data: {
+          variant: result.ok ? "success" : "error",
+        },
+        timeout: result.ok ? 5000 : 8000,
       });
 
       setOpen(false);
@@ -42,6 +46,10 @@ export function CancelAppointmentDialog({
       toastManager.add({
         title: "Cancellation failed",
         description: "Could not cancel this appointment. Please try again.",
+        data: {
+          variant: "error",
+        },
+        timeout: 8000,
       });
 
       setOpen(false);

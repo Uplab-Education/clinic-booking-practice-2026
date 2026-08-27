@@ -62,6 +62,10 @@ export function BookingSlotPicker({
       toastManager.add({
         title: result.ok ? "Booking successful" : "Booking failed",
         description: result.message,
+        data: {
+          variant: result.ok ? "success" : "error",
+        },
+        timeout: result.ok ? 5000 : 8000,
       });
 
       setSelectedSlot(null);
@@ -69,6 +73,10 @@ export function BookingSlotPicker({
       toastManager.add({
         title: "Booking failed",
         description: "Could not book this appointment. Please try again.",
+        data: {
+          variant: "error",
+        },
+        timeout: 8000,
       });
 
       setSelectedSlot(null);
