@@ -1,14 +1,14 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
 import {
   clearScheduleEntryAction,
   saveScheduleEntryAction,
   type ScheduleActionState,
 } from "@/app/admin/schedules/actions";
-import { Button } from "@/components/ui/button";
 import type { DoctorScheduleEntry } from "@/db/schema";
+import { generateSlotTimes } from "@/lib/availability";
 
 type ScheduleEditorProps = {
   doctorId: number;
@@ -40,7 +40,7 @@ export function ScheduleEditor({
 
         return (
           <ScheduleDayRow
-            key={day.value}
+            key={`${doctorId}-${day.value}-${entry?.startTime ?? "off"}-${entry?.endTime ?? "off"}-${entry?.slotMinutes ?? "off"}`}
             doctorId={doctorId}
             weekday={day.value}
             label={day.label}
@@ -65,130 +65,135 @@ function ScheduleDayRow({
   label,
   entry,
 }: ScheduleDayRowProps) {
-  const [saveState, saveFormAction, savePending] = useActionState(
+  const storedWorking = Boolean(entry);
+
+  const storedStartTime = entry?.startTime.slice(0, 5) ?? "09:00";
+  const storedEndTime = entry?.endTime.slice(0, 5) ?? "17:00";
+  const storedSlotMinutes = entry?.slotMinutes ?? 30;
+
+  const [working, setWorking] = useState(storedWorking);
+  const [startTime, setStartTime] = useState(storedStartTime);
+  const [endTime, setEndTime] = useState(storedEndTime);
+  const [slotMinutes, setSlotMinutes] = useState(storedSlotMinutes);
+
+  const [saveState, saveAction, savePending] = useActionState(
     saveScheduleEntryAction,
     initialState,
   );
 
-  const [clearState, clearFormAction, clearPending] = useActionState(
+  const [clearState, clearAction, clearPending] = useActionState(
     clearScheduleEntryAction,
     initialState,
   );
 
-  const [lastAction, setLastAction] = useState<
-    "save" | "clear" | null
-  >(null);
+  const generatedSlots = useMemo(() => {
+    if (!working) {
+      return [];
+    }
+
+    try {
+      return generateSlotTimes(
+        startTime,
+        endTime,
+        slotMinutes,
+      );
+    } catch {
+      return [];
+    }
+  }, [working, startTime, endTime, slotMinutes]);
+
+  const hasChanges =
+    working !== storedWorking ||
+    (working &&
+      (startTime !== storedStartTime ||
+        endTime !== storedEndTime ||
+        slotMinutes !== storedSlotMinutes));
+
+  const pending = savePending || clearPending;
+
+  function handleWorkingChange(nextWorking: boolean) {
+    if (nextWorking === working) {
+      return;
+    }
+
+    if (!nextWorking && storedWorking) {
+      const confirmed = window.confirm(
+        `Set ${label} as a day off? This removes the stored working hours for this day. Existing appointments will not be changed.`,
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      const formData = new FormData();
+      formData.set("doctorId", String(doctorId));
+      formData.set("weekday", String(weekday));
+
+      clearAction(formData);
+      setWorking(false);
+      return;
+    }
+
+    setWorking(nextWorking);
+  }
+
+  const resultState = clearState.error || clearState.success
+    ? clearState
+    : saveState;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="mb-4">
-        <h2 className="font-medium text-slate-950">
-          {label}
-        </h2>
+    <section className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="font-medium text-slate-950">
+            {label}
+          </h2>
 
-        {!entry ? (
-          <p className="text-sm text-slate-500">
-            Day off
+          <p className="mt-1 text-sm text-slate-500">
+            {working
+              ? "The doctor takes appointments this day."
+              : "The doctor takes no appointments this day."}
           </p>
-        ) : null}
+        </div>
+
+        <div
+          className="inline-flex w-full rounded-md border border-slate-300 p-1 sm:w-auto"
+          aria-label={`${label} schedule status`}
+        >
+          <button
+            type="button"
+            disabled={pending}
+            aria-pressed={working}
+            onClick={() => handleWorkingChange(true)}
+            className={`flex-1 rounded px-3 py-2 text-sm font-medium sm:flex-none ${
+              working
+                ? "bg-slate-950 text-white"
+                : "text-slate-700 hover:bg-slate-50"
+            } disabled:opacity-50`}
+          >
+            Working
+          </button>
+
+          <button
+            type="button"
+            disabled={pending}
+            aria-pressed={!working}
+            onClick={() => handleWorkingChange(false)}
+            className={`flex-1 rounded px-3 py-2 text-sm font-medium sm:flex-none ${
+              !working
+                ? "bg-slate-950 text-white"
+                : "text-slate-700 hover:bg-slate-50"
+            } disabled:opacity-50`}
+          >
+            Day off
+          </button>
+        </div>
       </div>
 
-      <form
-        action={saveFormAction}
-        onSubmit={() => {
-          setLastAction("save");
-        }}
-      >
-        <input
-          type="hidden"
-          name="doctorId"
-          value={doctorId}
-        />
-
-        <input
-          type="hidden"
-          name="weekday"
-          value={weekday}
-        />
-
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="space-y-2">
-            <label
-              htmlFor={`startTime-${weekday}`}
-              className="block text-sm font-medium text-slate-900"
-            >
-              Start time
-            </label>
-
-            <input
-              id={`startTime-${weekday}`}
-              type="time"
-              name="startTime"
-              defaultValue={entry?.startTime.slice(0, 5) ?? "09:00"}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor={`endTime-${weekday}`}
-              className="block text-sm font-medium text-slate-900"
-            >
-              End time
-            </label>
-
-            <input
-              id={`endTime-${weekday}`}
-              type="time"
-              name="endTime"
-              defaultValue={entry?.endTime.slice(0, 5) ?? "17:00"}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor={`slotMinutes-${weekday}`}
-              className="block text-sm font-medium text-slate-900"
-            >
-              Slot length
-            </label>
-
-            <select
-              id={`slotMinutes-${weekday}`}
-              name="slotMinutes"
-              defaultValue={entry?.slotMinutes ?? 30}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
-            >
-              <option value="15">15 minutes</option>
-              <option value="30">30 minutes</option>
-              <option value="60">60 minutes</option>
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <Button
-              type="submit"
-              disabled={savePending || clearPending}
-            >
-              {savePending ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </div>
-      </form>
-
-      {entry ? (
+      {working && (
         <form
-          action={clearFormAction}
-          className="mt-3"
-          onSubmit={(event) => {
-            if (!window.confirm(`Clear ${label} schedule?`)) {
-              event.preventDefault();
-              return;
-            }
-
-            setLastAction("clear");
-          }}
+          action={saveAction}
+          className="mt-5"
         >
           <input
             type="hidden"
@@ -202,44 +207,120 @@ function ScheduleDayRow({
             value={weekday}
           />
 
-          <Button
-            type="submit"
-            variant="secondary"
-            disabled={savePending || clearPending}
-          >
-            {clearPending ? "Clearing..." : "Clear"}
-          </Button>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <label
+                htmlFor={`startTime-${doctorId}-${weekday}`}
+                className="block text-sm font-medium text-slate-900"
+              >
+                Start time
+              </label>
+
+              <input
+                id={`startTime-${doctorId}-${weekday}`}
+                type="time"
+                name="startTime"
+                value={startTime}
+                onChange={(event) => setStartTime(event.target.value)}
+                className="w-full min-w-0 rounded-md border border-slate-300 px-3 py-2"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor={`endTime-${doctorId}-${weekday}`}
+                className="block text-sm font-medium text-slate-900"
+              >
+                End time
+              </label>
+
+              <input
+                id={`endTime-${doctorId}-${weekday}`}
+                type="time"
+                name="endTime"
+                value={endTime}
+                onChange={(event) => setEndTime(event.target.value)}
+                className="w-full min-w-0 rounded-md border border-slate-300 px-3 py-2"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor={`slotMinutes-${doctorId}-${weekday}`}
+                className="block text-sm font-medium text-slate-900"
+              >
+                Slot length
+              </label>
+
+              <select
+                id={`slotMinutes-${doctorId}-${weekday}`}
+                name="slotMinutes"
+                value={slotMinutes}
+                onChange={(event) =>
+                  setSlotMinutes(Number(event.target.value))
+                }
+                className="w-full min-w-0 rounded-md border border-slate-300 px-3 py-2"
+              >
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={60}>60 minutes</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-4 text-sm">
+            {generatedSlots.length > 0 ? (
+              <p className="text-slate-600">
+                This window produces{" "}
+                <strong>{generatedSlots.length}</strong>{" "}
+                appointment{" "}
+                {generatedSlots.length === 1 ? "slot" : "slots"}.
+              </p>
+            ) : (
+              <p className="text-red-600">
+                This window produces no bookable appointment slots.
+              </p>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button
+              type="submit"
+              disabled={
+                pending ||
+                !hasChanges ||
+                generatedSlots.length === 0
+              }
+              className="w-full rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            >
+              {savePending ? `Saving ${label}...` : `Save ${label}`}
+            </button>
+
+            {!hasChanges && (
+              <p className="text-sm text-slate-500">
+                This schedule matches the saved schedule.
+              </p>
+            )}
+          </div>
         </form>
-      ) : null}
+      )}
 
       <div
         className="mt-3 text-sm"
         aria-live="polite"
       >
-        {lastAction === "save" && saveState.error ? (
+        {resultState.error && (
           <p className="text-red-600">
-            {saveState.error}
+            {resultState.error}
           </p>
-        ) : null}
+        )}
 
-        {lastAction === "save" && saveState.success ? (
+        {resultState.success && (
           <p className="text-green-700">
-            {saveState.success}
+            {resultState.success}
           </p>
-        ) : null}
-
-        {lastAction === "clear" && clearState.error ? (
-          <p className="text-red-600">
-            {clearState.error}
-          </p>
-        ) : null}
-
-        {lastAction === "clear" && clearState.success ? (
-          <p className="text-green-700">
-            {clearState.success}
-          </p>
-        ) : null}
+        )}
       </div>
-    </div>
+    </section>
   );
 }
