@@ -5,13 +5,11 @@ import { CancelAppointmentDialog } from "@/components/appointments/CancelAppoint
 type AppointmentCardProps = {
   appointment: AppointmentWithDoctor;
   variant: "upcoming" | "past" | "cancelled";
-  onResult: (message: string) => void;
 };
 
 export function AppointmentCard({
   appointment,
   variant,
-  onResult,
 }: AppointmentCardProps) {
   const canCancel = variant === "upcoming";
 
@@ -46,12 +44,11 @@ export function AppointmentCard({
 
       {canCancel ? (
         <div className="mt-4">
-         <CancelAppointmentDialog
-  appointmentId={appointment.id}
-  doctorName={appointment.doctor.fullName}
-  startsAtLabel={formatAppointmentTime(appointment.startsAt)}
-  onResult={onResult}
-/>
+          <CancelAppointmentDialog
+            appointmentId={appointment.id}
+            doctorName={appointment.doctor.fullName}
+            startsAtLabel={formatAppointmentTime(appointment.startsAt)}
+          />
         </div>
       ) : null}
     </article>
