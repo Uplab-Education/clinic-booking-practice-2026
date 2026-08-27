@@ -1,11 +1,8 @@
-import Link from "next/link";
+import { FilterChipLink } from "@/components/ui/filter-chip-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
-import {
-  listActiveDoctors,
-  listSpecialties,
-} from "@/db/queries/doctors";
+import { listActiveDoctors, listSpecialties } from "@/db/queries/doctors";
 import { DoctorCard } from "@/components/doctors/DoctorCard";
 
 type DoctorsPageProps = {
@@ -14,9 +11,7 @@ type DoctorsPageProps = {
   }>;
 };
 
-export default async function DoctorsPage({
-  searchParams,
-}: DoctorsPageProps) {
+export default async function DoctorsPage({ searchParams }: DoctorsPageProps) {
   const params = await searchParams;
   const specialtyValue = params.specialty;
 
@@ -47,29 +42,21 @@ export default async function DoctorsPage({
           </span>
 
           <div className="flex flex-wrap gap-2">
-            <Link
+            <FilterChipLink
               href="/doctors"
-              className={`rounded-md border px-3 py-2 text-sm font-medium ${
-                specialtyId === undefined
-                  ? "border-slate-950 bg-slate-950 text-white"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
+              isActive={specialtyId === undefined}
             >
               All specialties
-            </Link>
+            </FilterChipLink>
 
             {specialties.map((specialty) => (
-              <Link
+              <FilterChipLink
                 key={specialty.id}
                 href={`/doctors?specialty=${specialty.id}`}
-                className={`rounded-md border px-3 py-2 text-sm font-medium ${
-                  specialtyId === specialty.id
-                    ? "border-slate-950 bg-slate-950 text-white"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                isActive={specialtyId === specialty.id}
               >
                 {specialty.name}
-              </Link>
+              </FilterChipLink>
             ))}
           </div>
         </div>
