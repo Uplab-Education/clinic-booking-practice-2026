@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { Toast } from "@base-ui/react/toast";
 
 import {
   clearScheduleEntryAction,
   saveScheduleEntryAction,
   type ScheduleActionState,
 } from "@/app/admin/schedules/actions";
+import { Button } from "@/components/ui/button";
 import type { DoctorScheduleEntry } from "@/db/schema";
 import { generateSlotTimes } from "@/lib/availability";
 
@@ -65,6 +67,8 @@ function ScheduleDayRow({
   label,
   entry,
 }: ScheduleDayRowProps) {
+  const toastManager = Toast.useToastManager();
+
   const storedWorking = Boolean(entry);
 
   const storedStartTime = entry?.startTime.slice(0, 5) ?? "09:00";
@@ -75,16 +79,7 @@ function ScheduleDayRow({
   const [startTime, setStartTime] = useState(storedStartTime);
   const [endTime, setEndTime] = useState(storedEndTime);
   const [slotMinutes, setSlotMinutes] = useState(storedSlotMinutes);
-
-  const [saveState, saveAction, savePending] = useActionState(
-    saveScheduleEntryAction,
-    initialState,
-  );
-
-  const [clearState, clearAction, clearPending] = useActionState(
-    clearScheduleEntryAction,
-    initialState,
-  );
+  const [pending, setPending] = useState(false);
 
   const generatedSlots = useMemo(() => {
     if (!working) {
@@ -109,10 +104,35 @@ function ScheduleDayRow({
         endTime !== storedEndTime ||
         slotMinutes !== storedSlotMinutes));
 
-  const pending = savePending || clearPending;
+  async function handleSave(formData: FormData) {
+    if (pending) {
+      return;
+    }
 
-  function handleWorkingChange(nextWorking: boolean) {
-    if (nextWorking === working) {
+    setPending(true);
+
+    try {
+      const result = await saveScheduleEntryAction(
+        initialState,
+        formData,
+      );
+
+      toastManager.add({
+        title: result.error ? "Schedule update failed" : "Schedule saved",
+        description: result.error ?? result.success,
+      });
+    } catch {
+      toastManager.add({
+        title: "Schedule update failed",
+        description: "Could not save the schedule. Please try again.",
+      });
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleWorkingChange(nextWorking: boolean) {
+    if (nextWorking === working || pending) {
       return;
     }
 
@@ -129,17 +149,38 @@ function ScheduleDayRow({
       formData.set("doctorId", String(doctorId));
       formData.set("weekday", String(weekday));
 
-      clearAction(formData);
-      setWorking(false);
+      setPending(true);
+
+      try {
+        const result = await clearScheduleEntryAction(
+          initialState,
+          formData,
+        );
+
+        toastManager.add({
+          title: result.error
+            ? "Schedule update failed"
+            : "Schedule cleared",
+          description: result.error ?? result.success,
+        });
+
+        if (!result.error) {
+          setWorking(false);
+        }
+      } catch {
+        toastManager.add({
+          title: "Schedule update failed",
+          description: "Could not clear the schedule. Please try again.",
+        });
+      } finally {
+        setPending(false);
+      }
+
       return;
     }
 
     setWorking(nextWorking);
   }
-
-  const resultState = clearState.error || clearState.success
-    ? clearState
-    : saveState;
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
@@ -160,39 +201,35 @@ function ScheduleDayRow({
           className="inline-flex w-full rounded-md border border-slate-300 p-1 sm:w-auto"
           aria-label={`${label} schedule status`}
         >
-          <button
+          <Button
             type="button"
             disabled={pending}
-            aria-pressed={working}
-            onClick={() => handleWorkingChange(true)}
-            className={`flex-1 rounded px-3 py-2 text-sm font-medium sm:flex-none ${
-              working
-                ? "bg-slate-950 text-white"
-                : "text-slate-700 hover:bg-slate-50"
-            } disabled:opacity-50`}
+            onClick={() => {
+              void handleWorkingChange(true);
+            }}
+            variant={working ? "primary" : "ghost"}
+            className="flex-1 sm:flex-none"
           >
             Working
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
             disabled={pending}
-            aria-pressed={!working}
-            onClick={() => handleWorkingChange(false)}
-            className={`flex-1 rounded px-3 py-2 text-sm font-medium sm:flex-none ${
-              !working
-                ? "bg-slate-950 text-white"
-                : "text-slate-700 hover:bg-slate-50"
-            } disabled:opacity-50`}
+            onClick={() => {
+              void handleWorkingChange(false);
+            }}
+            variant={!working ? "primary" : "ghost"}
+            className="flex-1 sm:flex-none"
           >
             Day off
-          </button>
+          </Button>
         </div>
       </div>
 
       {working && (
         <form
-          action={saveAction}
+          action={handleSave}
           className="mt-5"
         >
           <input
@@ -221,7 +258,9 @@ function ScheduleDayRow({
                 type="time"
                 name="startTime"
                 value={startTime}
-                onChange={(event) => setStartTime(event.target.value)}
+                onChange={(event) =>
+                  setStartTime(event.target.value)
+                }
                 className="w-full min-w-0 rounded-md border border-slate-300 px-3 py-2"
               />
             </div>
@@ -239,7 +278,9 @@ function ScheduleDayRow({
                 type="time"
                 name="endTime"
                 value={endTime}
-                onChange={(event) => setEndTime(event.target.value)}
+                onChange={(event) =>
+                  setEndTime(event.target.value)
+                }
                 className="w-full min-w-0 rounded-md border border-slate-300 px-3 py-2"
               />
             </div>
@@ -283,44 +324,21 @@ function ScheduleDayRow({
             )}
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <button
-              type="submit"
-              disabled={
-                pending ||
-                !hasChanges ||
-                generatedSlots.length === 0
-              }
-              className="w-full rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-            >
-              {savePending ? `Saving ${label}...` : `Save ${label}`}
-            </button>
-
-            {!hasChanges && (
-              <p className="text-sm text-slate-500">
-                This schedule matches the saved schedule.
-              </p>
-            )}
-          </div>
+          {hasChanges && (
+            <div className="mt-4">
+              <Button
+                type="submit"
+                disabled={
+                  pending || generatedSlots.length === 0
+                }
+                className="w-full sm:w-auto"
+              >
+                {pending ? `Saving ${label}...` : `Save ${label}`}
+              </Button>
+            </div>
+          )}
         </form>
       )}
-
-      <div
-        className="mt-3 text-sm"
-        aria-live="polite"
-      >
-        {resultState.error && (
-          <p className="text-red-600">
-            {resultState.error}
-          </p>
-        )}
-
-        {resultState.success && (
-          <p className="text-green-700">
-            {resultState.success}
-          </p>
-        )}
-      </div>
     </section>
   );
 }
