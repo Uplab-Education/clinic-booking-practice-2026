@@ -62,10 +62,22 @@ async function seed() {
   const insertedSpecialties = await db
     .insert(specialties)
     .values([
-      { name: "Therapist" },
-      { name: "Cardiologist" },
-      { name: "Dermatologist" },
-      { name: "Pediatrician" },
+      {
+        name: "Therapist",
+        description: "First stop for general symptoms, check-ups and referrals.",
+      },
+      {
+        name: "Cardiologist",
+        description: "Heart and blood pressure conditions, ECG review.",
+      },
+      {
+        name: "Dermatologist",
+        description: "Skin, hair and nail conditions, mole checks.",
+      },
+      {
+        name: "Pediatrician",
+        description: "Care for children from birth to 18 years.",
+      },
     ])
     .returning();
 
