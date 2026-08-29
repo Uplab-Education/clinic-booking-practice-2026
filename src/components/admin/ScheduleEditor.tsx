@@ -120,11 +120,19 @@ function ScheduleDayRow({
       toastManager.add({
         title: result.error ? "Schedule update failed" : "Schedule saved",
         description: result.error ?? result.success,
+        data: {
+          variant: result.error ? "error" : "success",
+        },
+        timeout: result.error ? 8000 : 5000,
       });
     } catch {
       toastManager.add({
         title: "Schedule update failed",
         description: "Could not save the schedule. Please try again.",
+        data: {
+          variant: "error",
+        },
+        timeout: 8000,
       });
     } finally {
       setPending(false);
@@ -162,6 +170,10 @@ function ScheduleDayRow({
             ? "Schedule update failed"
             : "Schedule cleared",
           description: result.error ?? result.success,
+          data: {
+            variant: result.error ? "error" : "success",
+          },
+          timeout: result.error ? 8000 : 5000,
         });
 
         if (!result.error) {
@@ -171,6 +183,10 @@ function ScheduleDayRow({
         toastManager.add({
           title: "Schedule update failed",
           description: "Could not clear the schedule. Please try again.",
+          data: {
+            variant: "error",
+          },
+          timeout: 8000,
         });
       } finally {
         setPending(false);
