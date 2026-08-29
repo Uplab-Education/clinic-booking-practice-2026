@@ -3,10 +3,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
-import {
-  listAllAppointments,
-  type AppointmentFilters,
-} from "@/db/queries/appointments";
+import { listAllAppointments } from "@/db/queries/appointments";
 import { listAllDoctors } from "@/db/queries/doctors";
 import { clinicDateIso, formatAppointmentTime } from "@/lib/availability";
 
@@ -43,12 +40,11 @@ export default async function AdminAppointmentsPage({
       ? params.status
       : undefined;
 
-  const filters: AppointmentFilters = { doctorId, status };
-
-  const filteredAppointments =
-    doctorId === undefined && status === undefined
-      ? allAppointments
-      : await listAllAppointments(filters);
+  const filteredAppointments = allAppointments.filter(
+    (appointment) =>
+      (doctorId === undefined || appointment.doctor.id === doctorId) &&
+      (status === undefined || appointment.status === status),
+  );
 
   const todayIso = clinicDateIso(new Date());
 
@@ -99,6 +95,7 @@ export default async function AdminAppointmentsPage({
           </label>
 
           <select
+            key={doctorId ?? "all-doctors"}
             id="doctorId"
             name="doctorId"
             defaultValue={doctorId ?? ""}
@@ -123,6 +120,7 @@ export default async function AdminAppointmentsPage({
           </label>
 
           <select
+            key={status ?? "all-statuses"}
             id="status"
             name="status"
             defaultValue={status ?? ""}
