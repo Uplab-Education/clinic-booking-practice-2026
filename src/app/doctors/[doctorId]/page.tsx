@@ -68,6 +68,12 @@ export default async function DoctorProfilePage({
           {doctor.specialty.name}
         </p>
 
+        {doctor.specialty.description ? (
+          <p className="mt-1 text-sm text-slate-500">
+            {doctor.specialty.description}
+          </p>
+        ) : null}
+
         {doctor.room ? (
           <p className="mt-2 text-sm text-slate-600">
             Room: {doctor.room}
