@@ -6,8 +6,34 @@ import { cn } from "@/lib/cn";
 type ToastVariant = "success" | "error";
 
 type ToastData = {
-  variant?: ToastVariant;
+  variant: ToastVariant;
 };
+
+const TOAST_TIMEOUT: Record<ToastVariant, number> = {
+  success: 5000,
+  error: 8000,
+};
+
+/**
+ * Builds the payload for toastManager.add(). Call sites say what happened and
+ * the variant decides both the colour and how long the toast stays on screen.
+ */
+export function toastOptions({
+  title,
+  description,
+  variant,
+}: {
+  title: string;
+  description?: string;
+  variant: ToastVariant;
+}) {
+  return {
+    title,
+    description,
+    data: { variant } satisfies ToastData,
+    timeout: TOAST_TIMEOUT[variant],
+  };
+}
 
 export function ToastProvider({
   children,
@@ -33,8 +59,7 @@ function ToastList() {
   return (
     <>
       {toastManager.toasts.map((toast) => {
-        const data = toast.data as ToastData | undefined;
-        const variant = data?.variant ?? "success";
+        const { variant } = toast.data as ToastData;
 
         return (
           <Toast.Root

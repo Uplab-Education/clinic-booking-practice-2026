@@ -9,6 +9,7 @@ import {
   type ScheduleActionState,
 } from "@/app/admin/schedules/actions";
 import { Button } from "@/components/ui/button";
+import { toastOptions } from "@/components/ui/toast";
 import type { DoctorScheduleEntry } from "@/db/schema";
 import { generateSlotTimes } from "@/lib/availability";
 
@@ -117,23 +118,21 @@ function ScheduleDayRow({
         formData,
       );
 
-      toastManager.add({
-        title: result.error ? "Schedule update failed" : "Schedule saved",
-        description: result.error ?? result.success,
-        data: {
+      toastManager.add(
+        toastOptions({
+          title: result.error ? "Schedule update failed" : "Schedule saved",
+          description: result.error ?? result.success,
           variant: result.error ? "error" : "success",
-        },
-        timeout: result.error ? 8000 : 5000,
-      });
+        }),
+      );
     } catch {
-      toastManager.add({
-        title: "Schedule update failed",
-        description: "Could not save the schedule. Please try again.",
-        data: {
+      toastManager.add(
+        toastOptions({
+          title: "Schedule update failed",
+          description: "Could not save the schedule. Please try again.",
           variant: "error",
-        },
-        timeout: 8000,
-      });
+        }),
+      );
     } finally {
       setPending(false);
     }
@@ -165,29 +164,27 @@ function ScheduleDayRow({
           formData,
         );
 
-        toastManager.add({
-          title: result.error
-            ? "Schedule update failed"
-            : "Schedule cleared",
-          description: result.error ?? result.success,
-          data: {
+        toastManager.add(
+          toastOptions({
+            title: result.error
+              ? "Schedule update failed"
+              : "Schedule cleared",
+            description: result.error ?? result.success,
             variant: result.error ? "error" : "success",
-          },
-          timeout: result.error ? 8000 : 5000,
-        });
+          }),
+        );
 
         if (!result.error) {
           setWorking(false);
         }
       } catch {
-        toastManager.add({
-          title: "Schedule update failed",
-          description: "Could not clear the schedule. Please try again.",
-          data: {
+        toastManager.add(
+          toastOptions({
+            title: "Schedule update failed",
+            description: "Could not clear the schedule. Please try again.",
             variant: "error",
-          },
-          timeout: 8000,
-        });
+          }),
+        );
       } finally {
         setPending(false);
       }

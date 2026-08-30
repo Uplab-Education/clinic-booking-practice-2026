@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { Toast } from "@base-ui/react/toast";
 import { Button } from "@/components/ui/button";
+import { toastOptions } from "@/components/ui/toast";
 import { cancelMyAppointment } from "@/app/appointments/actions";
 
 type CancelAppointmentDialogProps = {
@@ -32,25 +33,23 @@ export function CancelAppointmentDialog({
     try {
       const result = await cancelMyAppointment(appointmentId);
 
-      toastManager.add({
-        title: result.ok ? "Cancellation successful" : "Cancellation failed",
-        description: result.message,
-        data: {
+      toastManager.add(
+        toastOptions({
+          title: result.ok ? "Cancellation successful" : "Cancellation failed",
+          description: result.message,
           variant: result.ok ? "success" : "error",
-        },
-        timeout: result.ok ? 5000 : 8000,
-      });
+        }),
+      );
 
       setOpen(false);
     } catch {
-      toastManager.add({
-        title: "Cancellation failed",
-        description: "Could not cancel this appointment. Please try again.",
-        data: {
+      toastManager.add(
+        toastOptions({
+          title: "Cancellation failed",
+          description: "Could not cancel this appointment. Please try again.",
           variant: "error",
-        },
-        timeout: 8000,
-      });
+        }),
+      );
 
       setOpen(false);
     } finally {
