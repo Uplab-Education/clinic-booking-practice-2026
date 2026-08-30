@@ -8,6 +8,13 @@
       "when": 1786449267292,
       "tag": "0000_easy_phantom_reporter",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787946632987,
+      "tag": "0001_eager_bedlam",
+      "breakpoints": true
     }
   ]
 }
