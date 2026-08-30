@@ -5,6 +5,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import { Toast } from "@base-ui/react/toast";
 import { useAuth } from "@/auth/auth-provider";
 import { Button } from "@/components/ui/button";
+import { toastOptions } from "@/components/ui/toast";
 import { bookDoctorSlot } from "@/app/doctors/[doctorId]/actions";
 import type { DoctorWithSpecialty } from "@/db/queries/doctors";
 import {
@@ -59,17 +60,23 @@ export function BookingSlotPicker({
         selectedSlot.startsAt.toISOString(),
       );
 
-      toastManager.add({
-        title: result.ok ? "Booking successful" : "Booking failed",
-        description: result.message,
-      });
+      toastManager.add(
+        toastOptions({
+          title: result.ok ? "Booking successful" : "Booking failed",
+          description: result.message,
+          variant: result.ok ? "success" : "error",
+        }),
+      );
 
       setSelectedSlot(null);
     } catch {
-      toastManager.add({
-        title: "Booking failed",
-        description: "Could not book this appointment. Please try again.",
-      });
+      toastManager.add(
+        toastOptions({
+          title: "Booking failed",
+          description: "Could not book this appointment. Please try again.",
+          variant: "error",
+        }),
+      );
 
       setSelectedSlot(null);
     } finally {
