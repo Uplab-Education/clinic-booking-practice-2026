@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local src/db/migrate.ts",
     "db:seed": "node --env-file=.env.local src/db/seed.ts",
     "db:studio": "drizzle-kit studio"
   },

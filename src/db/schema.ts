@@ -27,6 +27,7 @@ export const users = pgTable("users", {
 export const specialties = pgTable("specialties", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
+  description: text("description").notNull().default(""),
 });
 
 export const doctors = pgTable("doctors", {

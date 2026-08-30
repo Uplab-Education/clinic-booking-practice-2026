@@ -56,7 +56,7 @@ vercel --scope uplab env pull /tmp/prod.env --environment production
 
 # Міграції - через unpooled connection, DDL погано дружить з пулером
 export DATABASE_URL=$(grep '^DATABASE_URL_UNPOOLED=' /tmp/prod.env | cut -d= -f2- | tr -d '"')
-npx drizzle-kit migrate
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/db/migrate.ts
 
 # Seed - УВАГА: TRUNCATE усіх таблиць перед вставкою
 node --env-file=/tmp/prod.env src/db/seed.ts
