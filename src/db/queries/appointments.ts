@@ -7,7 +7,6 @@ import {
   specialties,
   users,
   type Appointment,
-  type AppointmentStatus,
   type Doctor,
   type Specialty,
 } from "@/db/schema";
@@ -152,20 +151,8 @@ export async function listPatientAppointments(
   }));
 }
 
-export type AppointmentFilters = {
-  doctorId?: number;
-  status?: AppointmentStatus;
-};
-
-/** All appointments for the admin overview, with optional filters. */
-export async function listAllAppointments(
-  filters: AppointmentFilters = {},
-): Promise<AppointmentWithDetails[]> {
-  const conditions = [
-    filters.doctorId === undefined ? undefined : eq(appointments.doctorId, filters.doctorId),
-    filters.status === undefined ? undefined : eq(appointments.status, filters.status),
-  ].filter((condition) => condition !== undefined);
-
+/** Every appointment, for the admin overview. Filtering happens in the page. */
+export async function listAllAppointments(): Promise<AppointmentWithDetails[]> {
   const rows = await getDb()
     .select({
       appointment: appointments,
@@ -177,7 +164,6 @@ export async function listAllAppointments(
     .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
     .innerJoin(specialties, eq(doctors.specialtyId, specialties.id))
     .innerJoin(users, eq(appointments.patientId, users.id))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(asc(appointments.startsAt));
 
   return rows.map(({ appointment, doctor, specialty, patient }) => ({
