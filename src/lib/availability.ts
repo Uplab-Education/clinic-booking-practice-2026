@@ -130,7 +130,7 @@ export function formatSlotTime(date: Date) {
   }).format(date);
 }
 
-/** "Monday, 17 August" in clinic time. */
+/** "Monday 17 August" in clinic time. */
 export function formatDayLabel(date: Date) {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: CLINIC_TIME_ZONE,
@@ -140,7 +140,7 @@ export function formatDayLabel(date: Date) {
   }).format(date);
 }
 
-/** "Monday, 17 August, 09:00" in clinic time. */
+/** "Monday 17 August, 09:00" in clinic time. */
 export function formatAppointmentTime(date: Date) {
   return `${formatDayLabel(date)}, ${formatSlotTime(date)}`;
 }
