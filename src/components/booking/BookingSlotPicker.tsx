@@ -31,6 +31,7 @@ export function BookingSlotPicker({
   const toastManager = Toast.useToastManager();
 
   const [selectedSlot, setSelectedSlot] = useState<FreeSlot | null>(null);
+  const [comment, setComment] = useState("");
   const [isBooking, setIsBooking] = useState(false);
 
   if (user?.role === "admin") {
@@ -58,6 +59,7 @@ export function BookingSlotPicker({
       const result = await bookDoctorSlot(
         doctor.id,
         selectedSlot.startsAt.toISOString(),
+        comment,
       );
 
       toastManager.add(
@@ -68,7 +70,10 @@ export function BookingSlotPicker({
         }),
       );
 
-      setSelectedSlot(null);
+      if (result.ok) {
+        setSelectedSlot(null);
+        setComment("");
+      }
     } catch {
       toastManager.add(
         toastOptions({
@@ -77,8 +82,6 @@ export function BookingSlotPicker({
           variant: "error",
         }),
       );
-
-      setSelectedSlot(null);
     } finally {
       setIsBooking(false);
     }
@@ -99,6 +102,7 @@ export function BookingSlotPicker({
                 type="button"
                 variant="secondary"
                 onClick={() => {
+                  setComment("");
                   setSelectedSlot(slot);
                 }}
               >
@@ -114,6 +118,7 @@ export function BookingSlotPicker({
         onOpenChange={(open) => {
           if (!open && !isBooking) {
             setSelectedSlot(null);
+            setComment("");
           }
         }}
       >
@@ -133,6 +138,31 @@ export function BookingSlotPicker({
               </Dialog.Description>
             ) : null}
 
+            <div className="mt-5 space-y-2">
+              <label
+                htmlFor="booking-comment"
+                className="block text-sm font-medium text-slate-900"
+              >
+                Comment for the clinic
+              </label>
+
+              <textarea
+                id="booking-comment"
+                value={comment}
+                onChange={(event) => {
+                  setComment(event.target.value);
+                }}
+                maxLength={500}
+                rows={4}
+                placeholder="Optional"
+                className="w-full min-w-0 resize-y rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
+              />
+
+              <p className="text-xs text-slate-500">
+                {comment.length}/500
+              </p>
+            </div>
+
             <div className="mt-6 flex flex-wrap justify-end gap-2">
               <Button
                 type="button"
@@ -140,6 +170,7 @@ export function BookingSlotPicker({
                 disabled={isBooking}
                 onClick={() => {
                   setSelectedSlot(null);
+                  setComment("");
                 }}
               >
                 Cancel

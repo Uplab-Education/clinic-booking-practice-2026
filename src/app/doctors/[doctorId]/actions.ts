@@ -16,6 +16,7 @@ export type BookSlotResult = {
 export async function bookDoctorSlot(
   doctorId: number,
   startsAtIso: string,
+  comment: string,
 ): Promise<BookSlotResult> {
   const user = await getCurrentUser();
 
@@ -35,11 +36,21 @@ export async function bookDoctorSlot(
     };
   }
 
+  const normalizedComment = comment.trim();
+
+  if (normalizedComment.length > 500) {
+    return {
+      ok: false,
+      message: "Comment must be 500 characters or fewer.",
+    };
+  }
+
   try {
     await bookAppointment({
       doctorId,
       patientId: user.id,
       startsAt,
+      comment: normalizedComment || null,
     });
 
     revalidatePath(`/doctors/${doctorId}`);
