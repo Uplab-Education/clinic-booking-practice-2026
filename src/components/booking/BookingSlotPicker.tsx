@@ -48,44 +48,48 @@ export function BookingSlotPicker({
     );
   }
 
-  async function handleBooking() {
-    if (!selectedSlot || isBooking) {
-      return;
-    }
-
-    setIsBooking(true);
-
-    try {
-      const result = await bookDoctorSlot(
-        doctor.id,
-        selectedSlot.startsAt.toISOString(),
-        comment,
-      );
-
-      toastManager.add(
-        toastOptions({
-          title: result.ok ? "Booking successful" : "Booking failed",
-          description: result.message,
-          variant: result.ok ? "success" : "error",
-        }),
-      );
-
-      if (result.ok) {
-        setSelectedSlot(null);
-        setComment("");
-      }
-    } catch {
-      toastManager.add(
-        toastOptions({
-          title: "Booking failed",
-          description: "Could not book this appointment. Please try again.",
-          variant: "error",
-        }),
-      );
-    } finally {
-      setIsBooking(false);
-    }
+async function handleBooking() {
+  if (!selectedSlot || isBooking) {
+    return;
   }
+
+  setIsBooking(true);
+
+  try {
+    const result = await bookDoctorSlot(
+      doctor.id,
+      selectedSlot.startsAt.toISOString(),
+      comment,
+    );
+
+    toastManager.add(
+      toastOptions({
+        title: result.ok ? "Booking successful" : "Booking failed",
+        description: result.message,
+        variant: result.ok ? "success" : "error",
+      }),
+    );
+
+    if (
+      result.ok ||
+      result.message ===
+        "This time has just been taken, please pick another one."
+    ) {
+      setSelectedSlot(null);
+      setComment("");
+    }
+  } catch {
+    toastManager.add(
+      toastOptions({
+        title: "Booking failed",
+        description: "Could not book this appointment. Please try again.",
+        variant: "error",
+      }),
+    );
+  } finally {
+    setIsBooking(false);
+  }
+}
 
   return (
     <div className="mt-4 space-y-6">
