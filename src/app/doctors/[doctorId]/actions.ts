@@ -11,6 +11,7 @@ import {
 export type BookSlotResult = {
   ok: boolean;
   message: string;
+  reason?: "slot-taken" | "validation";
 };
 
 export async function bookDoctorSlot(
@@ -33,6 +34,7 @@ export async function bookDoctorSlot(
     return {
       ok: false,
       message: "Invalid appointment time.",
+      reason: "validation",
     };
   }
 
@@ -42,6 +44,7 @@ export async function bookDoctorSlot(
     return {
       ok: false,
       message: "Comment must be 500 characters or fewer.",
+      reason: "validation",
     };
   }
 
@@ -60,12 +63,23 @@ export async function bookDoctorSlot(
       message: "Appointment booked successfully.",
     };
   } catch (error) {
-    if (error instanceof SlotTakenError || error instanceof InvalidSlotError) {
+    if (error instanceof SlotTakenError) {
       revalidatePath(`/doctors/${doctorId}`);
 
       return {
         ok: false,
         message: "This time has just been taken, please pick another one.",
+        reason: "slot-taken",
+      };
+    }
+
+    if (error instanceof InvalidSlotError) {
+      revalidatePath(`/doctors/${doctorId}`);
+
+      return {
+        ok: false,
+        message: error.message,
+        reason: "validation",
       };
     }
 

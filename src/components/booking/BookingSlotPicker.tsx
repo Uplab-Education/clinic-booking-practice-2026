@@ -70,14 +70,10 @@ async function handleBooking() {
       }),
     );
 
-    if (
-      result.ok ||
-      result.message ===
-        "This time has just been taken, please pick another one."
-    ) {
-      setSelectedSlot(null);
-      setComment("");
-    }
+    if (result.ok || result.reason === "slot-taken") {
+  setSelectedSlot(null);
+  setComment("");
+}
   } catch {
     toastManager.add(
       toastOptions({
