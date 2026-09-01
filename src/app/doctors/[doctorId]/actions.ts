@@ -11,11 +11,13 @@ import {
 export type BookSlotResult = {
   ok: boolean;
   message: string;
+  reason?: "slot-taken" | "slot-unavailable" | "validation";
 };
 
 export async function bookDoctorSlot(
   doctorId: number,
   startsAtIso: string,
+  comment: string,
 ): Promise<BookSlotResult> {
   const user = await getCurrentUser();
 
@@ -32,6 +34,17 @@ export async function bookDoctorSlot(
     return {
       ok: false,
       message: "Invalid appointment time.",
+      reason: "validation",
+    };
+  }
+
+  const normalizedComment = comment.trim();
+
+  if (normalizedComment.length > 500) {
+    return {
+      ok: false,
+      message: "Comment must be 500 characters or fewer.",
+      reason: "validation",
     };
   }
 
@@ -40,6 +53,7 @@ export async function bookDoctorSlot(
       doctorId,
       patientId: user.id,
       startsAt,
+      comment: normalizedComment || null,
     });
 
     revalidatePath(`/doctors/${doctorId}`);
@@ -49,12 +63,23 @@ export async function bookDoctorSlot(
       message: "Appointment booked successfully.",
     };
   } catch (error) {
-    if (error instanceof SlotTakenError || error instanceof InvalidSlotError) {
+    if (error instanceof SlotTakenError) {
       revalidatePath(`/doctors/${doctorId}`);
 
       return {
         ok: false,
         message: "This time has just been taken, please pick another one.",
+        reason: "slot-taken",
+      };
+    }
+
+    if (error instanceof InvalidSlotError) {
+      revalidatePath(`/doctors/${doctorId}`);
+
+      return {
+        ok: false,
+        message: error.message,
+        reason: "slot-unavailable",
       };
     }
 

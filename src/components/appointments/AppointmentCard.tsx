@@ -35,9 +35,20 @@ export function AppointmentCard({
           <p className="mt-3 text-sm font-medium text-slate-700">
             {formatAppointmentTime(appointment.startsAt)}
           </p>
+
+          {appointment.comment ? (
+            <div className="mt-3 min-w-0">
+              <p className="text-sm font-medium text-slate-900">
+                Comment for the clinic
+              </p>
+              <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-slate-600">
+                {appointment.comment}
+              </p>
+            </div>
+          ) : null}
         </div>
 
-        <span className="w-fit rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700">
+        <span className="w-fit shrink-0 rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700">
           Status: {statusLabel}
         </span>
       </div>

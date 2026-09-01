@@ -60,6 +60,7 @@ export async function bookAppointment(input: {
   doctorId: number;
   patientId: number;
   startsAt: Date;
+  comment: string | null;
 }): Promise<Appointment> {
   const doctor = await getDoctorById(input.doctorId);
 
@@ -85,6 +86,7 @@ export async function bookAppointment(input: {
         patientId: input.patientId,
         startsAt: slot.startsAt,
         endsAt: slot.endsAt,
+        comment: input.comment?.trim() || null,
       })
       .returning();
 

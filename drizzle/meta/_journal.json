@@ -15,6 +15,13 @@
       "when": 1787946632987,
       "tag": "0001_eager_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788169635195,
+      "tag": "0002_nifty_cargill",
+      "breakpoints": true
     }
   ]
 }
