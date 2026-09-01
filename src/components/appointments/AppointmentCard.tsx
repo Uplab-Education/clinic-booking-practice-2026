@@ -48,7 +48,7 @@ export function AppointmentCard({
           ) : null}
         </div>
 
-        <span className="w-fit rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700">
+        <span className="w-fit shrink-0 rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700">
           Status: {statusLabel}
         </span>
       </div>

@@ -62,7 +62,7 @@ export async function bookDoctorSlot(
       ok: true,
       message: "Appointment booked successfully.",
     };
-    } catch (error) {
+  } catch (error) {
     if (error instanceof SlotTakenError) {
       revalidatePath(`/doctors/${doctorId}`);
 
