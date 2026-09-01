@@ -11,7 +11,7 @@ import {
 export type BookSlotResult = {
   ok: boolean;
   message: string;
-  reason?: "slot-taken" | "validation";
+  reason?: "slot-taken" | "slot-unavailable" | "validation";
 };
 
 export async function bookDoctorSlot(
@@ -62,7 +62,7 @@ export async function bookDoctorSlot(
       ok: true,
       message: "Appointment booked successfully.",
     };
-  } catch (error) {
+    } catch (error) {
     if (error instanceof SlotTakenError) {
       revalidatePath(`/doctors/${doctorId}`);
 
@@ -79,7 +79,7 @@ export async function bookDoctorSlot(
       return {
         ok: false,
         message: error.message,
-        reason: "validation",
+        reason: "slot-unavailable",
       };
     }
 

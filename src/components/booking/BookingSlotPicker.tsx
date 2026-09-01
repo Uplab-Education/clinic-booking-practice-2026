@@ -70,7 +70,11 @@ async function handleBooking() {
       }),
     );
 
-    if (result.ok || result.reason === "slot-taken") {
+    if (
+  result.ok ||
+  result.reason === "slot-taken" ||
+  result.reason === "slot-unavailable"
+) {
   setSelectedSlot(null);
   setComment("");
 }
