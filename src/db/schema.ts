@@ -78,6 +78,7 @@ export const appointments = pgTable(
     status: appointmentStatus("status").notNull().default("booked"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    comment: text("comment"),
   },
   (table) => [
     // The core double-booking guard: at most one *booked* appointment per doctor
