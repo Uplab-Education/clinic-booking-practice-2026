@@ -17,8 +17,8 @@ describe("generateSlotTimes", () => {
     ]);
   });
 
-  it("generates 30-minute slots", () => {
-    expect(generateSlotTimes("09:00", "11:00", 30)).toEqual([
+  it("generates 30-minute slots from database time format", () => {
+    expect(generateSlotTimes("09:00:00", "11:00:00", 30)).toEqual([
       "09:00",
       "09:30",
       "10:00",
@@ -41,8 +41,8 @@ describe("generateSlotTimes", () => {
     ]);
   });
 
-  it("returns no slots when the slot length is impossible", () => {
-    expect(generateSlotTimes("09:00", "09:20", 30)).toEqual([]);
+  it("returns no slots when slotMinutes is zero", () => {
+    expect(generateSlotTimes("09:00", "10:00", 0)).toEqual([]);
   });
 });
 
