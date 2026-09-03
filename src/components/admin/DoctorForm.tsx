@@ -28,6 +28,7 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
       className="mt-6 max-w-xl space-y-5 rounded-lg border border-slate-200 bg-white p-6"
     >
       {doctor && <input type="hidden" name="doctorId" value={doctor.id} />}
+
       {state.form && (
         <p className="text-sm text-red-600" aria-live="polite">
           {state.form}
@@ -123,6 +124,29 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
           defaultValue={doctor?.room ?? ""}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
+      </div>
+
+      <div className="space-y-2">
+        <label
+          htmlFor="phone"
+          className="block text-sm font-medium text-slate-900"
+        >
+          Phone
+        </label>
+
+        <input
+          id="phone"
+          name="phone"
+          defaultValue={doctor?.phone ?? ""}
+          aria-describedby={state.errors?.phone ? "phone-error" : undefined}
+          className="w-full rounded-md border border-slate-300 px-3 py-2"
+        />
+
+        {state.errors?.phone && (
+          <p id="phone-error" className="text-sm text-red-600">
+            {state.errors.phone}
+          </p>
+        )}
       </div>
 
       <div aria-live="polite">

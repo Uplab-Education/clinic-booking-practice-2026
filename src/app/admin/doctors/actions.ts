@@ -17,6 +17,7 @@ export type DoctorFormState = {
   errors?: {
     fullName?: string;
     specialtyId?: string;
+    phone?: string;
   };
   form?: string;
 };
@@ -29,6 +30,7 @@ type ParsedDoctorForm =
         specialtyId: number;
         bio: string;
         room: string | null;
+        phone: string | null;
       };
     }
   | {
@@ -55,6 +57,8 @@ function parseDoctorForm(
   const bio = String(formData.get("bio") ?? "").trim();
   const roomValue = String(formData.get("room") ?? "").trim();
   const room = roomValue === "" ? null : roomValue;
+  const phoneValue = String(formData.get("phone") ?? "").trim();
+  const phone = phoneValue === "" ? null : phoneValue.replace(/\s+/g, "");
 
   const errors: NonNullable<DoctorFormState["errors"]> = {};
 
@@ -68,6 +72,10 @@ function parseDoctorForm(
 
   if (!specialtyExists) {
     errors.specialtyId = "Please select a valid specialty.";
+  }
+
+  if (phone !== null && !/^\+?\d{9,15}$/.test(phone)) {
+    errors.phone = "Phone must contain 9 to 15 digits and may start with +.";
   }
 
   if (Object.keys(errors).length > 0) {
@@ -84,6 +92,7 @@ function parseDoctorForm(
       specialtyId,
       bio,
       room,
+      phone,
     },
   };
 }

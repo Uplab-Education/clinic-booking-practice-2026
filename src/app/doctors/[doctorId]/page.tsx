@@ -80,6 +80,12 @@ export default async function DoctorProfilePage({
           </p>
         ) : null}
 
+        {doctor.phone ? (
+          <p className="mt-2 text-sm text-slate-600">
+            Phone: {doctor.phone}
+          </p>
+        ) : null}
+
         {doctor.bio ? (
           <p className="mt-4 text-sm leading-6 text-slate-600">
             {doctor.bio}
