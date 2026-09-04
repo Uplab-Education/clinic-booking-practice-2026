@@ -8,6 +8,8 @@ import {
   type DoctorFormState,
 } from "@/app/admin/doctors/actions";
 
+import { formatPhoneNumber } from "@/lib/phone";
+
 import type { Doctor, Specialty } from "@/db/schema";
 
 type DoctorFormProps = {
@@ -22,12 +24,19 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
 
   const [state, formAction, pending] = useActionState(action, initialState);
 
+  // The stored phone is digits only, so show it the same way the doctors table
+  // and the public profile do. What the admin typed wins over it after an error.
+  const phoneValue =
+    state.values?.phone ??
+    (doctor?.phone ? formatPhoneNumber(doctor.phone) : "");
+
   return (
     <form
       action={formAction}
       className="mt-6 max-w-xl space-y-5 rounded-lg border border-slate-200 bg-white p-6"
     >
       {doctor && <input type="hidden" name="doctorId" value={doctor.id} />}
+
       {state.form && (
         <p className="text-sm text-red-600" aria-live="polite">
           {state.form}
@@ -43,9 +52,10 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
         </label>
 
         <input
+          key={`fullName-${state.values?.fullName ?? doctor?.fullName ?? ""}`}
           id="fullName"
           name="fullName"
-          defaultValue={doctor?.fullName ?? ""}
+          defaultValue={state.values?.fullName ?? doctor?.fullName ?? ""}
           aria-describedby={
             state.errors?.fullName ? "fullName-error" : undefined
           }
@@ -68,9 +78,12 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
         </label>
 
         <select
+          key={`specialty-${state.values?.specialtyId ?? doctor?.specialtyId ?? ""}`}
           id="specialtyId"
           name="specialtyId"
-          defaultValue={doctor?.specialtyId ?? ""}
+          defaultValue={
+            state.values?.specialtyId ?? doctor?.specialtyId ?? ""
+          }
           aria-describedby={
             state.errors?.specialtyId ? "specialtyId-error" : undefined
           }
@@ -101,10 +114,11 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
         </label>
 
         <textarea
+          key={`bio-${state.values?.bio ?? doctor?.bio ?? ""}`}
           id="bio"
           name="bio"
           rows={4}
-          defaultValue={doctor?.bio ?? ""}
+          defaultValue={state.values?.bio ?? doctor?.bio ?? ""}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
       </div>
@@ -118,11 +132,38 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
         </label>
 
         <input
+          key={`room-${state.values?.room ?? doctor?.room ?? ""}`}
           id="room"
           name="room"
-          defaultValue={doctor?.room ?? ""}
+          defaultValue={state.values?.room ?? doctor?.room ?? ""}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
+      </div>
+
+      <div className="space-y-2">
+        <label
+          htmlFor="phone"
+          className="block text-sm font-medium text-slate-900"
+        >
+          Phone
+        </label>
+
+        <input
+          key={`phone-${phoneValue}`}
+          id="phone"
+          name="phone"
+          type="tel"
+          defaultValue={phoneValue}
+          placeholder="+380 (44) 123-45-67"
+          aria-describedby={state.errors?.phone ? "phone-error" : undefined}
+          className="w-full rounded-md border border-slate-300 px-3 py-2"
+        />
+
+        {state.errors?.phone && (
+          <p id="phone-error" className="text-sm text-red-600">
+            {state.errors.phone}
+          </p>
+        )}
       </div>
 
       <div aria-live="polite">

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { listAllDoctors } from "@/db/queries/doctors";
+import { formatPhoneNumber } from "@/lib/phone";
 
 export default async function AdminDoctorsPage() {
   await requireAdmin();
@@ -36,6 +37,7 @@ export default async function AdminDoctorsPage() {
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Specialty</th>
                 <th className="px-4 py-3">Room</th>
+                <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Actions</th>
               </tr>
@@ -54,6 +56,10 @@ export default async function AdminDoctorsPage() {
                   <td className="px-4 py-3">{doctor.specialty.name}</td>
 
                   <td className="px-4 py-3">{doctor.room ?? "—"}</td>
+
+                  <td className="px-4 py-3">
+                    {doctor.phone ? formatPhoneNumber(doctor.phone) : "—"}
+                  </td>
 
                   <td className="px-4 py-3">
                     <span className="rounded-full border border-slate-200 px-2 py-1 text-xs font-medium">

@@ -17,6 +17,14 @@ export type DoctorFormState = {
   errors?: {
     fullName?: string;
     specialtyId?: string;
+    phone?: string;
+  };
+  values?: {
+    fullName: string;
+    specialtyId: string;
+    bio: string;
+    room: string;
+    phone: string;
   };
   form?: string;
 };
@@ -29,11 +37,13 @@ type ParsedDoctorForm =
         specialtyId: number;
         bio: string;
         room: string | null;
+        phone: string | null;
       };
     }
   | {
       success: false;
       errors: NonNullable<DoctorFormState["errors"]>;
+      values: NonNullable<DoctorFormState["values"]>;
     };
 
 function parseDoctorId(value: FormDataEntryValue | null) {
@@ -56,6 +66,10 @@ function parseDoctorForm(
   const roomValue = String(formData.get("room") ?? "").trim();
   const room = roomValue === "" ? null : roomValue;
 
+  const phoneValue = String(formData.get("phone") ?? "").trim();
+  const phone =
+    phoneValue === "" ? null : phoneValue.replace(/[()\s-]/g, "");
+
   const errors: NonNullable<DoctorFormState["errors"]> = {};
 
   if (!fullName) {
@@ -70,10 +84,21 @@ function parseDoctorForm(
     errors.specialtyId = "Please select a valid specialty.";
   }
 
+  if (phone !== null && !/^\+?\d{9,15}$/.test(phone)) {
+    errors.phone = "Phone must contain 9 to 15 digits and may start with +.";
+  }
+
   if (Object.keys(errors).length > 0) {
     return {
       success: false,
       errors,
+      values: {
+        fullName,
+        specialtyId: String(formData.get("specialtyId") ?? ""),
+        bio,
+        room: roomValue,
+        phone: phoneValue,
+      },
     };
   }
 
@@ -84,6 +109,7 @@ function parseDoctorForm(
       specialtyId,
       bio,
       room,
+      phone,
     },
   };
 }
@@ -100,6 +126,7 @@ export async function createDoctorAction(
   if (!parsed.success) {
     return {
       errors: parsed.errors,
+      values: parsed.values,
     };
   }
 
@@ -153,6 +180,7 @@ export async function updateDoctorAction(
   if (!parsed.success) {
     return {
       errors: parsed.errors,
+      values: parsed.values,
     };
   }
 

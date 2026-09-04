@@ -38,6 +38,7 @@ export const doctors = pgTable("doctors", {
     .references(() => specialties.id),
   bio: text("bio").notNull().default(""),
   room: text("room"),
+  phone: text("phone"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

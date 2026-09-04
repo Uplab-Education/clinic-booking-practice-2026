@@ -5,6 +5,7 @@ import { getDoctorById } from "@/db/queries/doctors";
 import { listAvailableSlots } from "@/db/queries/appointments";
 import { BookingSlotPicker } from "@/components/booking/BookingSlotPicker";
 import { groupSlotsByDay } from "@/lib/availability";
+import { formatPhoneNumber } from "@/lib/phone";
 
 type DoctorProfilePageProps = {
   params: Promise<{ doctorId: string }>;
@@ -77,6 +78,12 @@ export default async function DoctorProfilePage({
         {doctor.room ? (
           <p className="mt-2 text-sm text-slate-600">
             Room: {doctor.room}
+          </p>
+        ) : null}
+
+        {doctor.phone ? (
+          <p className="mt-2 text-sm text-slate-600">
+            Phone: {formatPhoneNumber(doctor.phone)}
           </p>
         ) : null}
 

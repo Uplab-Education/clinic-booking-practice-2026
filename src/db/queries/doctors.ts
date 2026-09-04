@@ -55,6 +55,7 @@ export type DoctorInput = {
   specialtyId: number;
   bio: string;
   room: string | null;
+  phone: string | null;
 };
 
 export async function createDoctor(input: DoctorInput): Promise<Doctor> {
