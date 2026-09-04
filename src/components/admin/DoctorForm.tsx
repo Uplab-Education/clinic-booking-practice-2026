@@ -44,9 +44,10 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
         </label>
 
         <input
+          key={`fullName-${state.values?.fullName ?? doctor?.fullName ?? ""}`}
           id="fullName"
           name="fullName"
-          defaultValue={doctor?.fullName ?? ""}
+          defaultValue={state.values?.fullName ?? doctor?.fullName ?? ""}
           aria-describedby={
             state.errors?.fullName ? "fullName-error" : undefined
           }
@@ -69,9 +70,12 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
         </label>
 
         <select
+          key={`specialty-${state.values?.specialtyId ?? doctor?.specialtyId ?? ""}`}
           id="specialtyId"
           name="specialtyId"
-          defaultValue={doctor?.specialtyId ?? ""}
+          defaultValue={
+            state.values?.specialtyId ?? doctor?.specialtyId ?? ""
+          }
           aria-describedby={
             state.errors?.specialtyId ? "specialtyId-error" : undefined
           }
@@ -102,10 +106,11 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
         </label>
 
         <textarea
+          key={`bio-${state.values?.bio ?? doctor?.bio ?? ""}`}
           id="bio"
           name="bio"
           rows={4}
-          defaultValue={doctor?.bio ?? ""}
+          defaultValue={state.values?.bio ?? doctor?.bio ?? ""}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
       </div>
@@ -119,9 +124,10 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
         </label>
 
         <input
+          key={`room-${state.values?.room ?? doctor?.room ?? ""}`}
           id="room"
           name="room"
-          defaultValue={doctor?.room ?? ""}
+          defaultValue={state.values?.room ?? doctor?.room ?? ""}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
       </div>
@@ -135,9 +141,12 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
         </label>
 
         <input
+          key={`phone-${state.values?.phone ?? doctor?.phone ?? ""}`}
           id="phone"
           name="phone"
-          defaultValue={doctor?.phone ?? ""}
+          type="tel"
+          defaultValue={state.values?.phone ?? doctor?.phone ?? ""}
+          placeholder="+380 (44) 123-45-67"
           aria-describedby={state.errors?.phone ? "phone-error" : undefined}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />

@@ -19,6 +19,13 @@ export type DoctorFormState = {
     specialtyId?: string;
     phone?: string;
   };
+  values?: {
+    fullName: string;
+    specialtyId: string;
+    bio: string;
+    room: string;
+    phone: string;
+  };
   form?: string;
 };
 
@@ -36,6 +43,7 @@ type ParsedDoctorForm =
   | {
       success: false;
       errors: NonNullable<DoctorFormState["errors"]>;
+      values: NonNullable<DoctorFormState["values"]>;
     };
 
 function parseDoctorId(value: FormDataEntryValue | null) {
@@ -57,8 +65,10 @@ function parseDoctorForm(
   const bio = String(formData.get("bio") ?? "").trim();
   const roomValue = String(formData.get("room") ?? "").trim();
   const room = roomValue === "" ? null : roomValue;
+
   const phoneValue = String(formData.get("phone") ?? "").trim();
-  const phone = phoneValue === "" ? null : phoneValue.replace(/\s+/g, "");
+  const phone =
+    phoneValue === "" ? null : phoneValue.replace(/[()\s-]/g, "");
 
   const errors: NonNullable<DoctorFormState["errors"]> = {};
 
@@ -82,6 +92,13 @@ function parseDoctorForm(
     return {
       success: false,
       errors,
+      values: {
+        fullName,
+        specialtyId: String(formData.get("specialtyId") ?? ""),
+        bio,
+        room: roomValue,
+        phone: phoneValue,
+      },
     };
   }
 
@@ -109,6 +126,7 @@ export async function createDoctorAction(
   if (!parsed.success) {
     return {
       errors: parsed.errors,
+      values: parsed.values,
     };
   }
 
@@ -162,6 +180,7 @@ export async function updateDoctorAction(
   if (!parsed.success) {
     return {
       errors: parsed.errors,
+      values: parsed.values,
     };
   }
 
