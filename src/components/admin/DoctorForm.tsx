@@ -8,6 +8,8 @@ import {
   type DoctorFormState,
 } from "@/app/admin/doctors/actions";
 
+import { formatPhoneNumber } from "@/lib/phone";
+
 import type { Doctor, Specialty } from "@/db/schema";
 
 type DoctorFormProps = {
@@ -21,6 +23,12 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
   const action = doctor ? updateDoctorAction : createDoctorAction;
 
   const [state, formAction, pending] = useActionState(action, initialState);
+
+  // The stored phone is digits only, so show it the same way the doctors table
+  // and the public profile do. What the admin typed wins over it after an error.
+  const phoneValue =
+    state.values?.phone ??
+    (doctor?.phone ? formatPhoneNumber(doctor.phone) : "");
 
   return (
     <form
@@ -141,11 +149,11 @@ export function DoctorForm({ specialties, doctor }: DoctorFormProps) {
         </label>
 
         <input
-          key={`phone-${state.values?.phone ?? doctor?.phone ?? ""}`}
+          key={`phone-${phoneValue}`}
           id="phone"
           name="phone"
           type="tel"
-          defaultValue={state.values?.phone ?? doctor?.phone ?? ""}
+          defaultValue={phoneValue}
           placeholder="+380 (44) 123-45-67"
           aria-describedby={state.errors?.phone ? "phone-error" : undefined}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
